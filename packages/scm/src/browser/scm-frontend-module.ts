@@ -27,6 +27,7 @@ import {
     ScmTitleRegistry
 } from './scm-title-registry';
 import {ScmResourceComaandContribution, ScmResourceCommandRegistry} from './scm-resource-command-registry';
+import {ScmQuickOpenService} from './scm-quick-open-service';
 
 export default new ContainerModule(bind => {
     bind(ScmService).to(ScmServiceImpl).inSingletonScope();
@@ -37,6 +38,7 @@ export default new ContainerModule(bind => {
         createWidget: () => ctx.container.get(ScmWidget)
     })).inSingletonScope();
 
+    bind(ScmQuickOpenService).toSelf().inSingletonScope();
     bindViewContribution(bind, ScmContribution);
     bind(FrontendApplicationContribution).toService(ScmContribution);
 

@@ -18,20 +18,27 @@ import {
     AbstractViewContribution,
     FrontendApplication,
     FrontendApplicationContribution,
+    QuickOpenService,
     StatusBar,
     StatusBarAlignment,
     StatusBarEntry
 } from '@theia/core/lib/browser';
-import { ScmCommand, ScmService } from './scm-service';
+import {ScmCommand, ScmService} from './scm-service';
 import { ScmWidget } from '../browser/scm-widget';
+import URI from '@theia/core/lib/common/uri';
+import {CommandRegistry} from '@theia/core';
+import {ScmQuickOpenService} from './scm-quick-open-service';
 
 export const SCM_WIDGET_FACTORY_ID = 'scm';
 
 @injectable()
 export class ScmContribution extends AbstractViewContribution<ScmWidget> implements FrontendApplicationContribution {
+
     @inject(StatusBar) protected readonly statusBar: StatusBar;
     @inject(ScmService) protected readonly scmService: ScmService;
-
+    @inject(CommandRegistry) protected readonly commandRegistry: CommandRegistry;
+    @inject(QuickOpenService) protected readonly quickOpenService: QuickOpenService;
+    @inject(ScmQuickOpenService) protected readonly scmQuickOpenService: ScmQuickOpenService;
     constructor() {
         super({
             widgetId: SCM_WIDGET_FACTORY_ID,
@@ -46,6 +53,11 @@ export class ScmContribution extends AbstractViewContribution<ScmWidget> impleme
     }
 
     onStart(): void {
+        const CHANGE_REPOSITORY = {
+            id: 'scm.change.repository',
+            label: 'Scm: Change Repository...'
+        };
+
         const refresh = (commands: ScmCommand[]) => {
             commands.forEach(command => {
                 const statusBaCommand: StatusBarEntry = {
@@ -63,6 +75,22 @@ export class ScmContribution extends AbstractViewContribution<ScmWidget> impleme
             if (onDidChangeStatusBarCommands) {
                 onDidChangeStatusBarCommands(commands => refresh(commands));
             }
+        });
+
+        this.commandRegistry.registerCommand(CHANGE_REPOSITORY, {
+            execute: () => {
+                this.scmQuickOpenService.changeRepository();
+            }
+        });
+        this.scmService.onDidChangeSelectedRepositories(repository => {
+            const path = new URI(repository[0].provider.rootUri).path;
+            this.statusBar.setElement(CHANGE_REPOSITORY.id, {
+                text: `$(database) ${path.base}`,
+                tooltip: path.toString(),
+                command: CHANGE_REPOSITORY.id,
+                alignment: StatusBarAlignment.LEFT,
+                priority: 100
+            });
         });
     }
 

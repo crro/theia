@@ -202,20 +202,10 @@ export class GitViewContribution extends AbstractViewContribution<GitWidget>
         this.repositoryTracker.onDidChangeRepository(repository => {
             if (repository) {
                 if (this.hasMultipleRepositories()) {
-                    const path = new URI(repository.localUri).path;
-                    this.scmService.selectedRepositories.forEach(scmRepo => scmRepo.setSelected(false));
+                    // const path = new URI(repository.localUri).path;
                     const scmRepository = this.scmService.repositories.find(scmRepo => scmRepo.provider.rootUri === repository.localUri);
                     if (scmRepository) {
                         scmRepository.setSelected(true);
-                    }
-                    const scmProvider = this.scmProviders.find(provider => provider.rootUri === repository.localUri);
-                    if (scmProvider) {
-                        (scmProvider as ScmProviderImpl).fireChangeStatusBarCommands([{
-                            id: GIT_COMMANDS.CHANGE_REPOSITORY.id,
-                            text: `$(database) ${path.base}`,
-                            command: GIT_COMMANDS.CHANGE_REPOSITORY.id,
-                            tooltip: path.toString()
-                        }]);
                     }
                 } else {
                     this.statusBar.removeElement(GitViewContribution.GIT_SELECTED_REPOSITORY);
